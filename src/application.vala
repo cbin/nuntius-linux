@@ -229,7 +229,15 @@ public class Application : Gtk.Application {
         first_activation = false;
 
         if (connect_host != null) {
-            print("connecting to %s\n", connect_host);
+            var client = new SocketClient();
+            client.connect_to_host_async.begin(connect_host, 7000, cancellable, (obj, res) => {
+                try {
+                    var connection = client.connect_to_host_async.end(res);
+                    connections.add_connection(new Connection(connect_host, connection));
+                } catch (Error e) {
+                    warning("Could not connect to server: %s", connect_host);
+                }
+            });
         }
 
         base.activate();
