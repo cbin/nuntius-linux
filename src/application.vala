@@ -115,9 +115,16 @@ public class Application : Gtk.Application {
     private bool first_activation;
     private Window window;
     private List<NotificationApp> _notification_apps;
+    private string connect_host;
 
     private const GLib.ActionEntry[] app_entries = {
         { "about", on_about_activate }
+    };
+
+    private const OptionEntry[] options = {
+        {"connect", '\0', 0, OptionArg.STRING, null,
+         N_("Connect to a specifi server"), null},
+        {null}
     };
 
     public signal void notification_app_added(NotificationApp notification_app);
@@ -127,7 +134,8 @@ public class Application : Gtk.Application {
     }
 
     public Application() {
-        Object(application_id: "org.holylobster.nuntius");
+        Object(application_id: "org.holylobster.nuntius",
+               flags: ApplicationFlags.HANDLES_COMMAND_LINE);
     }
 
     construct {
@@ -220,7 +228,21 @@ public class Application : Gtk.Application {
 
         first_activation = false;
 
+        if (connect_host != null) {
+            print("connecting to %s\n", connect_host);
+        }
+
         base.activate();
+    }
+
+    protected override int command_line(ApplicationCommandLine cl) {
+        var dict = cl.get_options_dict();
+
+        dict.lookup("connect", "s", out connect_host);
+        activate();
+        connect_host = null;
+
+        return 0;
     }
 
     private async void connect_interface(DBusObject object, DBusInterface iface, bool dump) {
