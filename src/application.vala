@@ -136,6 +136,7 @@ public class Application : Gtk.Application {
     public Application() {
         Object(application_id: "org.holylobster.nuntius",
                flags: ApplicationFlags.HANDLES_COMMAND_LINE);
+        add_main_option_entries(options);
     }
 
     construct {
@@ -221,6 +222,7 @@ public class Application : Gtk.Application {
     protected override void activate() {
         // We want it to start as a daemon and not showing the window from
         // the beginning
+
         if (!first_activation) {
             ensure_window();
             window.present();
@@ -229,13 +231,14 @@ public class Application : Gtk.Application {
         first_activation = false;
 
         if (connect_host != null) {
+            var host = connect_host;
             var client = new SocketClient();
-            client.connect_to_host_async.begin(connect_host, 7000, cancellable, (obj, res) => {
+            client.connect_to_host_async.begin(host, 7000, cancellable, (obj, res) => {
                 try {
                     var connection = client.connect_to_host_async.end(res);
-                    connections.add_connection(new Connection(connect_host, connection));
+                    connections.add_connection(new Connection(host, connection));
                 } catch (Error e) {
-                    warning("Could not connect to server: %s", connect_host);
+                    warning("Could not connect to server: %s", host);
                 }
             });
         }
